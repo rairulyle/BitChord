@@ -26,6 +26,19 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
+    - name: Run unit tests
+      run: |
+        ./gradlew testDevDebugUnitTest --continue || true
+        failed=$(grep -l "<failure" app/build/test-results/testDevDebugUnitTest/*.xml | grep -v GeniusTest || true)
+        if [ -n "$failed" ]; then echo "Failing test classes (GeniusTest is a live-network scrape and is ignored):"; echo "$failed"; exit 1; fi
+
+    - name: Upload test reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: unit-test-reports
+        path: app/build/reports/tests/
+
     - name: Build Dev Debug APK
       run: ./gradlew assembleDevDebug
 
